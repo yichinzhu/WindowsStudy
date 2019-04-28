@@ -148,6 +148,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="http.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="startup.h" />
     <ClInclude Include="stdafx.h" />
@@ -155,6 +156,7 @@
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="http.cpp" />
     <ClCompile Include="startup.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -2,15 +2,36 @@
 #include "utils.h"
 
 
-BOOL handleExc()
+void AlertExc()
 {
+#ifdef _DEBUG
 	DWORD err = GetLastError();
 	TCHAR buffer[1024];
 	FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, err, 0, buffer, 1024, NULL);
-	//MessageBox(NULL, buffer, NULL, MB_OK);
-	return TRUE;
+	MessageBox(NULL, buffer, NULL, MB_OK);
+#endif // DEBUG
 }
+
+void handleExc()
+{
+#ifdef _DEBUG
+	DWORD err = GetLastError();
+	TCHAR buffer[1024];
+	FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, err, 0, buffer, 1024, NULL);
+	WriteLog(buffer);
+#endif
+}
+
+void PrintDebug(LPTSTR msg)
+{
+#ifdef _DEBUG
+	WriteLog(msg);
+#endif // _DEBUG
+
+}
+
 
 BOOL GetAppPath(LPTSTR appPath)
 {
@@ -91,4 +112,81 @@ BOOL ReleaseFile(DWORD resourceId)
 	CloseHandle(chromeInstaller);
 	*/
 	return TRUE;
+}
+
+void WriteLog(LPCTSTR msg)
+{
+	// convert multibyte char into char
+	LPSTR msgInBytes = NULL;
+	DWORD len = WideCharToMultiByte(CP_UTF8, 0, msg, -1, NULL, 0, 0, 0);
+	if (len <= 0) {
+		AlertExc();
+		return;
+	}
+	msgInBytes = new char[len + 1];
+	WideCharToMultiByte(CP_UTF8, 0, msg, -1, msgInBytes, len, 0, 0);
+
+	// open log file
+	TCHAR logFile[MAX_PATH + 1];
+	GetAppPath(logFile);
+	PathCombine(logFile, logFile, L"application.log");
+	HANDLE logHandler = CreateFile(
+		logFile,
+		FILE_APPEND_DATA,
+		0,
+		NULL,
+		OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL
+	);
+	if (!logHandler) {
+		delete[] msgInBytes;
+		AlertExc();
+		return;
+	}
+	// move to the end
+	SetFilePointer(logHandler, 0, NULL, FILE_END);
+	// write log
+	DWORD writenLen = 0;
+	WriteFile(logHandler, msgInBytes, strlen(msgInBytes), &writenLen, NULL);
+	WriteFile(logHandler, "\r\n", 2, &writenLen, NULL);
+	// clean
+	delete[] msgInBytes;
+	CloseHandle(logHandler);
+}
+
+void WriteStrLog(LPSTR msg)
+{
+	TCHAR logFile[MAX_PATH + 1];
+	GetAppPath(logFile);
+	PathCombine(logFile, logFile, L"application.log");
+	HANDLE logHandler = CreateFile(
+		logFile,
+		FILE_APPEND_DATA,
+		0,
+		NULL,
+		OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL
+	);
+	if (!logHandler) {
+		AlertExc();
+		return;
+	}
+	// move to the end
+	SetFilePointer(logHandler, 0, NULL, FILE_END);
+	// write log
+	DWORD writenLen = 0;
+	WriteFile(logHandler, msg, strlen(msg), &writenLen, NULL);
+	WriteFile(logHandler, "\r\n", 2, &writenLen, NULL);
+	// clean
+	CloseHandle(logHandler);
+}
+
+void PrintStrDebug(LPSTR msg)
+{
+#ifdef _DEBUG
+	WriteStrLog(msg);
+#endif // DEBUG
+
 }
