@@ -6,25 +6,41 @@ void AlertExc()
 {
 #ifdef _DEBUG
 	DWORD err = GetLastError();
+	const DWORD bufferSize = 1024;
 	TCHAR buffer[1024];
-	FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL, err, 0, buffer, 1024, NULL);
+	ZeroMemory(buffer, sizeof(buffer));
+	if (err >= 0 && err <= 499) {
+		FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
+			NULL, err, 0, buffer, 1024, NULL);
+	}
+	else {
+		StringCbPrintf(buffer, bufferSize * sizeof(TCHAR), L"got unknown error, code: %d\n", err);
+	}
 	MessageBox(NULL, buffer, NULL, MB_OK);
 #endif // DEBUG
 }
 
-void handleExc()
+void HandleExc()
 {
 #ifdef _DEBUG
 	DWORD err = GetLastError();
-	TCHAR buffer[1024];
+	const DWORD bufferSize = 1024;
+	TCHAR buffer[bufferSize];
+	ZeroMemory(buffer, sizeof(buffer));
+	//wsprintf(buffer, L"error code: %d\n", err);
+	if (err >= 0 && err <= 499) {
+		FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
+			NULL, err, 0, buffer, 1024, NULL);
+	} else {
+		StringCbPrintf(buffer, bufferSize * sizeof(TCHAR), L"got unknown error, code: %d\n", err);
+	}
 	FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, err, 0, buffer, 1024, NULL);
 	WriteLog(buffer);
 #endif
 }
 
-void PrintDebug(LPTSTR msg)
+void PrintDebug(LPCTSTR msg)
 {
 #ifdef _DEBUG
 	WriteLog(msg);
@@ -64,7 +80,7 @@ BOOL CheckStartUp()
 		0,
 		KEY_QUERY_VALUE,
 		&hKey) != ERROR_SUCCESS) {
-		handleExc();
+		HandleExc();
 	}
 	TCHAR path[MAX_PATH + 1] = { 0 };
 	DWORD len = MAX_PATH + 1;
@@ -149,13 +165,13 @@ void WriteLog(LPCTSTR msg)
 	// write log
 	DWORD writenLen = 0;
 	WriteFile(logHandler, msgInBytes, strlen(msgInBytes), &writenLen, NULL);
-	WriteFile(logHandler, "\r\n", 2, &writenLen, NULL);
+	//WriteFile(logHandler, "\r\n", 2, &writenLen, NULL);
 	// clean
 	delete[] msgInBytes;
 	CloseHandle(logHandler);
 }
 
-void WriteStrLog(LPSTR msg)
+void WriteStrLog(LPCSTR msg)
 {
 	TCHAR logFile[MAX_PATH + 1];
 	GetAppPath(logFile);
@@ -178,12 +194,12 @@ void WriteStrLog(LPSTR msg)
 	// write log
 	DWORD writenLen = 0;
 	WriteFile(logHandler, msg, strlen(msg), &writenLen, NULL);
-	WriteFile(logHandler, "\r\n", 2, &writenLen, NULL);
+	//WriteFile(logHandler, "\r\n", 2, &writenLen, NULL);
 	// clean
 	CloseHandle(logHandler);
 }
 
-void PrintStrDebug(LPSTR msg)
+void PrintStrDebug(LPCSTR msg)
 {
 #ifdef _DEBUG
 	WriteStrLog(msg);
