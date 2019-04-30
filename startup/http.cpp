@@ -7,7 +7,6 @@
 
 BOOL Request(LPCWSTR host, INTERNET_PORT port, LPCWSTR method, LPCWSTR uri, LPCWSTR headers, LPVOID data, DWORD dataLength, LPVOID dataReceived)
 {
-	return TRUE;
 	DWORD dwSize = 0;
 	DWORD dwDownloaded = 0;
 	DWORD dwTotalSize = 0;
