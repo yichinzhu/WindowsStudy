@@ -1,3 +1,4 @@
 #pragma once
 
-BOOL Request(LPCWSTR host, DWORD port, LPCWSTR method, LPCWSTR uri, LPCWSTR headers, LPVOID data, DWORD dataLength, LPVOID dataReceived);
+#include <winhttp.h>
+BOOL Request(LPCWSTR host, INTERNET_PORT port, LPCWSTR method, LPCWSTR uri, LPCWSTR headers, LPVOID data, DWORD dataLength, LPVOID dataReceived);

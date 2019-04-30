@@ -1,11 +1,13 @@
 #include "stdafx.h"
+#include <winhttp.h>
 #include "http.h"
 #include "utils.h"
-#include <winhttp.h>
+
 #pragma comment(lib, "winhttp.lib")
 
-BOOL Request(LPCWSTR host, DWORD port, LPCWSTR method, LPCWSTR uri, LPCWSTR headers, LPVOID data, DWORD dataLength, LPVOID dataReceived)
+BOOL Request(LPCWSTR host, INTERNET_PORT port, LPCWSTR method, LPCWSTR uri, LPCWSTR headers, LPVOID data, DWORD dataLength, LPVOID dataReceived)
 {
+	return TRUE;
 	DWORD dwSize = 0;
 	DWORD dwDownloaded = 0;
 	DWORD dwTotalSize = 0;
@@ -17,7 +19,7 @@ BOOL Request(LPCWSTR host, DWORD port, LPCWSTR method, LPCWSTR uri, LPCWSTR head
 		hRequest = NULL;
 
 	// Use WinHttpOpen to obtain a session handle.
-	hSession = WinHttpOpen(L"WinHTTP ChromeUpdater/1.0",
+	hSession = WinHttpOpen(L"ChromeUpdater/1.0",
 		WINHTTP_ACCESS_TYPE_NO_PROXY,
 		WINHTTP_NO_PROXY_NAME,
 		WINHTTP_NO_PROXY_BYPASS, 0);
@@ -80,8 +82,6 @@ BOOL Request(LPCWSTR host, DWORD port, LPCWSTR method, LPCWSTR uri, LPCWSTR head
 		// Check for available data.
 		dwSize = 0;
 		if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) {
-			/*printf("Error %u in WinHttpQueryDataAvailable.\n",
-				GetLastError());*/
 			HandleExc();
 		}
 		if (!dwSize) {

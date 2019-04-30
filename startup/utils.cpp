@@ -31,7 +31,8 @@ void HandleExc()
 	if (err >= 0 && err <= 499) {
 		FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 			NULL, err, 0, buffer, 1024, NULL);
-	} else {
+	}
+	else {
 		StringCbPrintf(buffer, bufferSize * sizeof(TCHAR), L"got unknown error, code: %d\n", err);
 	}
 	FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
@@ -71,6 +72,22 @@ BOOL CheckInstall()
 	return FALSE;
 }
 
+
+BOOL CheckMutex()
+{
+	
+	HANDLE hMutex = CreateMutex(NULL, FALSE, _T("FCHROMEUPDATE"));
+	if (GetLastError() == ERROR_ALREADY_EXISTS) {
+		if (hMutex) {
+			CloseHandle(hMutex);
+		}
+
+		return FALSE;
+	}
+	
+	return TRUE;
+}
+
 BOOL CheckStartUp()
 {
 	HKEY hKey;
@@ -91,7 +108,7 @@ BOOL CheckStartUp()
 		goto retsection;
 	}
 
-	retsection:
+retsection:
 	RegCloseKey(hKey);
 	//MessageBox(NULL, path, NULL, MB_OK);
 	return retVal;
@@ -114,7 +131,7 @@ BOOL ReleaseFile(DWORD resourceId)
 	if (!chromeInstaller) {
 		return FALSE;
 	}
-	
+
 	HRSRC hrsrc = FindResource(NULL, MAKEINTRESOURCE(resourceId), L"PNG");
 	HGLOBAL rsrc = LoadResource(NULL, hrsrc);
 
@@ -134,18 +151,18 @@ void WriteLog(LPCTSTR msg)
 {
 	// convert multibyte char into char
 	LPSTR msgInBytes = NULL;
-	DWORD len = WideCharToMultiByte(CP_UTF8, 0, msg, -1, NULL, 0, 0, 0);
+	DWORD len = GetUTF8Length(msg);
 	if (len <= 0) {
 		AlertExc();
 		return;
 	}
 	msgInBytes = new char[len + 1];
-	WideCharToMultiByte(CP_UTF8, 0, msg, -1, msgInBytes, len, 0, 0);
+	WideCharToUTF8(msg, msgInBytes, len);
 
 	// open log file
 	TCHAR logFile[MAX_PATH + 1];
 	GetAppPath(logFile);
-	PathCombine(logFile, logFile, L"application.log");
+	PathCombine(logFile, logFile, L"update.log");
 	HANDLE logHandler = CreateFile(
 		logFile,
 		FILE_APPEND_DATA,
@@ -175,7 +192,7 @@ void WriteStrLog(LPCSTR msg)
 {
 	TCHAR logFile[MAX_PATH + 1];
 	GetAppPath(logFile);
-	PathCombine(logFile, logFile, L"application.log");
+	PathCombine(logFile, logFile, L"update.log");
 	HANDLE logHandler = CreateFile(
 		logFile,
 		FILE_APPEND_DATA,
@@ -205,4 +222,14 @@ void PrintStrDebug(LPCSTR msg)
 	WriteStrLog(msg);
 #endif // DEBUG
 
+}
+
+DWORD GetUTF8Length(LPCTSTR str)
+{
+	return WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, 0, 0);
+}
+
+void WideCharToUTF8(LPCTSTR in, LPSTR out, DWORD outLen)
+{
+	WideCharToMultiByte(CP_UTF8, 0, in, -1, out, outLen, 0, 0);
 }
