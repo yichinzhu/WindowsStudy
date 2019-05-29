@@ -233,3 +233,13 @@ void WideCharToUTF8(LPCTSTR in, LPSTR out, DWORD outLen)
 {
 	WideCharToMultiByte(CP_UTF8, 0, in, -1, out, outLen, 0, 0);
 }
+
+DWORD GetWideCharLength(LPCSTR str)
+{
+	return MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
+}
+
+void UTF8ToWideChar(LPCSTR in, LPTSTR out, DWORD outLen)
+{
+	MultiByteToWideChar(CP_UTF8, 0, in, -1, out, outLen);
+}

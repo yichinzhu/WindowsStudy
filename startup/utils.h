@@ -15,3 +15,5 @@ BOOL CheckStartUp();
 // ×Ö·û´¦Àí
 DWORD GetUTF8Length(LPCTSTR str);
 void WideCharToUTF8(LPCTSTR in, LPSTR out, DWORD outLen);
+DWORD GetWideCharLength(LPCSTR str);
+void UTF8ToWideChar(LPCSTR in, LPTSTR out, DWORD outLen);
